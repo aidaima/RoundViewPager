@@ -32,41 +32,17 @@ public class RoundViewPager extends ViewPager {
     @Override
     public void setAdapter(PagerAdapter adapter) {
         super.setAdapter(adapter);
+
         // offset first element so that we can scroll to the left
-        setCurrentItem(0);
-    }
-
-    @Override
-    public void setCurrentItem(int item) {
-        // offset the current item to ensure there is space to scroll
-        setCurrentItem(item, false);
-    }
-
-    @Override
-    public void setCurrentItem(int item, boolean smoothScroll) {
+        // setCurrentItem(0);
+        int item = 0;
         if (getAdapter().getCount() == 0) {
-            super.setCurrentItem(item, smoothScroll);
+            super.setCurrentItem(item, true);
             return;
         }
         item = getOffsetAmount() + (item % getAdapter().getCount());
 
-        super.setCurrentItem(item, smoothScroll);
-    }
-
-    @Override
-    public int getCurrentItem() {
-        if (getAdapter().getCount() == 0) {
-            return super.getCurrentItem();
-        }
-        int position = super.getCurrentItem();
-        if (getAdapter() instanceof RoundPagerAdapter) {
-            RoundPagerAdapter infAdapter = (RoundPagerAdapter) getAdapter();
-            // Return the actual item position in the data backing
-            // InfinitePagerAdapter
-            return (position % infAdapter.getRealCount());
-        } else {
-            return super.getCurrentItem();
-        }
+        super.setCurrentItem(item, true);
     }
 
     private Rect getChildRectInPagerCoordinates(Rect outRect, View child) {
@@ -139,7 +115,7 @@ public class RoundViewPager extends ViewPager {
                 final int currLeft = getChildRectInPagerCoordinates(mTempRect,
                         currentFocused).left;
                 if (currentFocused != null && nextLeft >= currLeft) {
-                    handled = doPageLeft();
+                    handled = movePrev(true);
                 } else {
                     handled = nextFocused.requestFocus();
                 }
@@ -152,17 +128,17 @@ public class RoundViewPager extends ViewPager {
                 final int currLeft = getChildRectInPagerCoordinates(mTempRect,
                         currentFocused).left;
                 if (currentFocused != null && nextLeft <= currLeft) {
-                    handled = doPageRight();
+                    handled = moveNext(true);
                 } else {
                     handled = nextFocused.requestFocus();
                 }
             }
         } else if (direction == FOCUS_LEFT || direction == FOCUS_BACKWARD) {
             // Trying to move left and nothing there; try to page.
-            handled = doPageLeft();
+            handled = movePrev(true);
         } else if (direction == FOCUS_RIGHT || direction == FOCUS_FORWARD) {
             // Trying to move right and nothing there; try to page.
-            handled = doPageRight();
+            handled = moveNext(true);
         }
         if (handled) {
             playSoundEffect(SoundEffectConstants
@@ -171,37 +147,51 @@ public class RoundViewPager extends ViewPager {
         return handled;
     }
 
-    private boolean doPageLeft() {
+    /**
+     * Move to the prev pager
+     * 
+     * @param smooth
+     * @return
+     */
+    public boolean movePrev(boolean smooth) {
         if (super.getCurrentItem() > 0) {
-            super.setCurrentItem(super.getCurrentItem() - 1, true);
+            super.setCurrentItem(super.getCurrentItem() - 1, smooth);
             return true;
         }
         return false;
     }
 
-    private boolean doPageRight() {
+    /**
+     * Move to the next pager
+     * 
+     * @param smooth
+     * @return
+     */
+    public boolean moveNext(boolean smooth) {
         PagerAdapter adapter = super.getAdapter();
         if (adapter != null
                 && super.getCurrentItem() < (adapter.getCount() - 1)) {
-            super.setCurrentItem(super.getCurrentItem() + 1, true);
+            super.setCurrentItem(super.getCurrentItem() + 1, smooth);
             return true;
         }
         return false;
     }
 
+    /**
+     * Get the beginning scroll position
+     * 
+     * @return
+     */
     private int getOffsetAmount() {
         if (getAdapter().getCount() == 0) {
             return 0;
         }
         if (getAdapter() instanceof RoundPagerAdapter) {
             RoundPagerAdapter infAdapter = (RoundPagerAdapter) getAdapter();
-            // allow for 100 back cycles from the beginning
-            // should be enough to create an illusion of infinity
-            // warning: scrolling to very high values (1,000,000+) results in
-            // strange drawing behaviour
             int realCount = infAdapter.getRealCount();
             int count = infAdapter.getCount();
-            return realCount * (count - realCount) / 2;
+            int offset = count / 2;
+            return offset - (offset % realCount);
         } else {
             return 0;
         }
