@@ -29,6 +29,26 @@ public class RoundViewPager extends ViewPager {
         super(context, attrs);
     }
 
+    /**
+     * Get the virtual current item position. Maybe we can get virtual current
+     * item as 3 while real current item as 1790032
+     * 
+     * @return
+     */
+    public int getVirtualCurrentItem() {
+        if (getAdapter().getCount() == 0) {
+            return 0;
+        }
+
+        if (getAdapter() instanceof RoundPagerAdapter) {
+            RoundPagerAdapter infAdapter = (RoundPagerAdapter) getAdapter();
+            int realCount = infAdapter.getRealCount();
+            return super.getCurrentItem() % realCount;
+        } else {
+            return super.getCurrentItem();
+        }
+    }
+
     @Override
     public void setAdapter(PagerAdapter adapter) {
         super.setAdapter(adapter);
