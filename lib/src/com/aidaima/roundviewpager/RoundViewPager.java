@@ -3,7 +3,7 @@ package com.aidaima.roundviewpager;
 import android.content.Context;
 import android.graphics.Rect;
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+//import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.FocusFinder;
@@ -53,16 +53,37 @@ public class RoundViewPager extends ViewPager {
     public void setAdapter(PagerAdapter adapter) {
         super.setAdapter(adapter);
 
-        // offset first element so that we can scroll to the left
-        // setCurrentItem(0);
-        int item = 0;
+        setCurrentItemEx(0, true);
+    }
+
+    @Override
+    public void setCurrentItem(int position) {
+        setCurrentItemEx(position, true);
+    }
+
+    @Override
+    public void setCurrentItem(int position, boolean smooth) {
+        setCurrentItemEx(position, smooth);
+    }
+
+    public void setCurrentItemEx(int position, boolean smooth) {
         if (getAdapter().getCount() == 0) {
-            super.setCurrentItem(item, true);
+            super.setCurrentItem(position, true);
             return;
         }
-        item = getOffsetAmount() + (item % getAdapter().getCount());
 
-        super.setCurrentItem(item, true);
+        int curPos = super.getCurrentItem();
+        if (curPos > 0) {
+            RoundPagerAdapter infAdapter = (RoundPagerAdapter) getAdapter();
+            int realCount = infAdapter.getRealCount();
+
+            int dif = ((position - curPos) % realCount);
+            position += dif;
+        } else {
+            position = getOffsetAmount() + (position % getAdapter().getCount());
+        }
+
+        super.setCurrentItem(position, smooth);
     }
 
     private Rect getChildRectInPagerCoordinates(Rect outRect, View child) {
